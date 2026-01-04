@@ -48,13 +48,13 @@ ActiveAdmin.register Donation do
     column "狀態", :status do |d|
       case d.status
       when "paid"
-        status_tag I18n.t("donation_statuses.#{d.status}"), class: "ok"
+        status_tag I18n.t("donation_statuses.#{d.status}"), class: "green"
       when "awaiting_payment"
-        status_tag I18n.t("donation_statuses.#{d.status}"), class: "warning"
+        status_tag I18n.t("donation_statuses.#{d.status}"), class: "orange"
       when "cancelled"
-        status_tag I18n.t("donation_statuses.#{d.status}"), class: "error"
+        status_tag I18n.t("donation_statuses.#{d.status}"), class: "red"
       else
-        status_tag I18n.t("donation_statuses.#{d.status}"), class: "no"
+        status_tag I18n.t("donation_statuses.#{d.status}")
       end
     end
     column "綠界編號", :ecpay_trade_no do |d|
@@ -81,13 +81,16 @@ ActiveAdmin.register Donation do
       row "電子信箱", &:email
       row "祈福內容", &:prayer
       row "狀態" do |d|
-        status_class = case d.status
-                       when "paid" then "ok"
-                       when "cancelled" then "error"
-                       when "awaiting_payment" then "warning"
-                       else "warning"
-                       end
-        status_tag I18n.t("donation_statuses.#{d.status}"), class: status_class
+        case d.status
+        when "paid"
+          status_tag I18n.t("donation_statuses.#{d.status}"), class: "green"
+        when "awaiting_payment"
+          status_tag I18n.t("donation_statuses.#{d.status}"), class: "orange"
+        when "cancelled"
+          status_tag I18n.t("donation_statuses.#{d.status}"), class: "red"
+        else
+          status_tag I18n.t("donation_statuses.#{d.status}")
+        end
       end
       row "付款方式" do |d|
         d.payment_method.present? ? I18n.t("payment_methods.#{d.payment_method}") : "尚未選擇"
@@ -136,7 +139,8 @@ ActiveAdmin.register Donation do
 
         if resource.cvs_payment_no.present?
           para "繳費代碼：#{resource.cvs_payment_no}", style: "font-size: 18px; font-weight: bold; font-family: monospace;"
-          para "請至全家、萊爾富、OK超商告知店員「代碼繳費」", style: "color: #666;"
+          para "請至超商多媒體機台輸入代碼，產生繳費單後前往櫃台繳費", style: "color: #666;"
+          para "（適用 7-11 ibon / 全家 FamiPort / 萊爾富 Life-ET / OK mini）", style: "color: #999; font-size: 12px;"
         end
 
         if resource.cvs_barcode_1.present?

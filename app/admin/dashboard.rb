@@ -33,9 +33,14 @@ ActiveAdmin.register_page "Dashboard" do
 
       column do
         panel "捐款類型分布" do
-          table_for Donation.group(:donation_type).count do |item|
-            column("類型") { |i| I18n.t("donation_types.#{i[0]}") }
-            column("數量") { |i| "#{i[1]} 筆" }
+          type_counts = Donation.group(:donation_type).count
+          if type_counts.any?
+            table_for type_counts.to_a do
+              column("類型") { |item| I18n.t("donation_types.#{item[0]}", default: item[0]) }
+              column("數量") { |item| "#{item[1]} 筆" }
+            end
+          else
+            para "尚無捐獻紀錄", style: "color: #999; text-align: center; padding: 20px;"
           end
         end
       end
@@ -49,9 +54,20 @@ ActiveAdmin.register_page "Dashboard" do
             column("類型") { |d| I18n.t("donation_types.#{d.donation_type}") }
             column("金額") { |d| number_to_currency(d.amount, unit: "NT$ ", precision: 0) }
             column("功德芳名") { |d| d.donor_name }
+            column("收據") { |d|
+              d.needs_receipt? ? status_tag("需要", class: "yes") : span("-", style: "color: #999;")
+            }
             column("狀態") { |d|
-              status_tag I18n.t("donation_statuses.#{d.status}"),
-                         class: d.paid? ? "ok" : (d.cancelled? ? "error" : "warning")
+              case d.status
+              when "paid"
+                status_tag I18n.t("donation_statuses.#{d.status}"), class: "green"
+              when "awaiting_payment"
+                status_tag I18n.t("donation_statuses.#{d.status}"), class: "orange"
+              when "cancelled"
+                status_tag I18n.t("donation_statuses.#{d.status}"), class: "red"
+              else
+                status_tag I18n.t("donation_statuses.#{d.status}")
+              end
             }
             column("時間") { |d| l(d.created_at, format: :short) rescue d.created_at.strftime("%Y-%m-%d %H:%M") }
           end
