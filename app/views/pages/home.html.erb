@@ -509,10 +509,10 @@
             <textarea name="prayer" rows="3" placeholder="請輸入您的祈福內容..."></textarea>
           </div>
           <button type="submit" class="btn btn-primary" style="width: 100%;">
-            送出捐款登記
+            前往付款
           </button>
           <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #666;">
-            * 金流服務即將開通，目前請先登記，協會將與您聯繫
+            * 提交後將導向綠界金流進行安全付款
           </p>
         </form>
       </div>
@@ -641,11 +641,12 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(function(result) {
         if (result.success) {
           showMessage(result.message, 'success');
-          form.reset();
-          toggleEmailRequired(); // 重設電子信箱必填狀態
-          document.querySelectorAll('.amount-btn').forEach(function(b) {
-            b.classList.remove('active');
-          });
+          // 導向付款頁面
+          if (result.payment_url) {
+            setTimeout(function() {
+              window.location.href = result.payment_url;
+            }, 1000);
+          }
         } else {
           showMessage(result.message + (result.errors ? ': ' + result.errors.join(', ') : ''), 'error');
         }

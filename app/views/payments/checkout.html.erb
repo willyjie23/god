@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>付款處理中 - 佳里廣澤信仰宗教協會</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      padding: 3rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 400px;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e0e0e0;
+      border-top-color: #c9a227;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    h1 { color: #333; font-size: 1.5rem; margin-bottom: 1rem; }
+    p { color: #666; line-height: 1.6; }
+    .amount { font-size: 2rem; color: #c9a227; font-weight: bold; margin: 1rem 0; }
+    .info { background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-top: 1.5rem; text-align: left; }
+    .info-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
+    .info-row:last-child { border-bottom: none; }
+    .label { color: #888; }
+    .value { color: #333; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="spinner"></div>
+    <h1>正在導向付款頁面</h1>
+    <p>請稍候，系統正在將您導向綠界金流...</p>
+
+    <div class="amount">NT$ <%= number_with_delimiter(@donation.amount.to_i) %></div>
+
+    <div class="info">
+      <div class="info-row">
+        <span class="label">捐款類型</span>
+        <span class="value"><%= I18n.t("donation_types.#{@donation.donation_type}") %></span>
+      </div>
+      <div class="info-row">
+        <span class="label">功德芳名</span>
+        <span class="value"><%= @donation.donor_name %></span>
+      </div>
+      <div class="info-row">
+        <span class="label">付款方式</span>
+        <span class="value"><%= I18n.t("payment_methods.#{@donation.payment_method}") %></span>
+      </div>
+    </div>
+  </div>
+
+  <%= @payment_form_html.html_safe %>
+
+  <script>
+    // 自動提交表單導向綠界
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        document.getElementById('ecpay-form').submit();
+      }, 1500);
+    });
+  </script>
+</body>
+</html>

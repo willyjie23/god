@@ -24,7 +24,8 @@ zh-TW:
     construction: "建設基金"
 
   donation_statuses:
-    pending: "待付款"
+    pending: "待開單"
+    awaiting_payment: "待繳費"
     paid: "已付款"
     cancelled: "已取消"
 

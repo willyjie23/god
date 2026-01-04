@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_04_111656) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_04_132840) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,21 +42,39 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_04_111656) do
 
   create_table "donations", force: :cascade do |t|
     t.decimal "amount", precision: 10, scale: 2, null: false
+    t.string "atm_bank_code"
+    t.string "atm_v_account"
     t.datetime "created_at", null: false
     t.string "created_by", default: "frontend", null: false
+    t.string "cvs_barcode_1"
+    t.string "cvs_barcode_2"
+    t.string "cvs_barcode_3"
+    t.string "cvs_payment_no"
     t.string "donation_type", null: false
     t.string "donor_name", null: false
+    t.datetime "ecpay_payment_date"
+    t.string "ecpay_payment_type"
+    t.string "ecpay_rtn_code"
+    t.string "ecpay_rtn_msg"
+    t.boolean "ecpay_simulate_paid", default: false
+    t.integer "ecpay_trade_amt"
+    t.string "ecpay_trade_no"
     t.string "email"
+    t.string "merchant_trade_no"
     t.boolean "needs_receipt", default: false, null: false
     t.text "notes"
     t.datetime "paid_at"
+    t.datetime "payment_expire_date"
     t.string "payment_method"
-    t.string "phone", null: false
+    t.string "phone"
     t.text "prayer"
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.index ["created_at"], name: "index_donations_on_created_at"
     t.index ["donation_type"], name: "index_donations_on_donation_type"
+    t.index ["ecpay_payment_type"], name: "index_donations_on_ecpay_payment_type"
+    t.index ["ecpay_trade_no"], name: "index_donations_on_ecpay_trade_no"
+    t.index ["merchant_trade_no"], name: "index_donations_on_merchant_trade_no"
     t.index ["status"], name: "index_donations_on_status"
   end
 end

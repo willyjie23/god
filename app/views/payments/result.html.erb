@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>付款結果 - 佳里廣澤信仰宗教協會</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .container {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+    }
+    .icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 2.5rem;
+    }
+    .icon.success { background: #d4edda; color: #28a745; }
+    .icon.warning { background: #fff3cd; color: #856404; }
+    .icon.error { background: #f8d7da; color: #dc3545; }
+    h1 { font-size: 1.75rem; margin-bottom: 1rem; }
+    h1.success { color: #28a745; }
+    h1.warning { color: #856404; }
+    h1.error { color: #dc3545; }
+    .message { color: #666; line-height: 1.6; margin-bottom: 1.5rem; }
+    .info { background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: left; }
+    .info-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #eee; }
+    .info-row:last-child { border-bottom: none; }
+    .label { color: #888; }
+    .value { color: #333; font-weight: 500; }
+    .amount { font-size: 1.5rem; color: #c9a227; }
+    .payment-info {
+      background: #e7f3ff;
+      border: 1px solid #b8daff;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+    .payment-info h3 {
+      color: #004085;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    .payment-info .code {
+      font-family: monospace;
+      font-size: 1.25rem;
+      background: white;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      margin: 0.5rem 0;
+      display: inline-block;
+      color: #333;
+    }
+    .payment-info .expire {
+      color: #856404;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    .btn {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: #c9a227;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: background 0.3s;
+    }
+    .btn:hover { background: #b08d1f; }
+    .trade-no { font-size: 0.85rem; color: #888; margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <% if @success && @awaiting_payment %>
+      <div class="icon warning">!</div>
+      <h1 class="warning">取號成功</h1>
+    <% elsif @success %>
+      <div class="icon success">✓</div>
+      <h1 class="success">付款成功</h1>
+    <% else %>
+      <div class="icon error">✕</div>
+      <h1 class="error">付款未完成</h1>
+    <% end %>
+
+    <p class="message"><%= @message %></p>
+
+    <% if @donation %>
+      <div class="info">
+        <div class="info-row">
+          <span class="label">捐款類型</span>
+          <span class="value"><%= @donation.donation_type_name %></span>
+        </div>
+        <div class="info-row">
+          <span class="label">功德芳名</span>
+          <span class="value"><%= @donation.donor_name %></span>
+        </div>
+        <div class="info-row">
+          <span class="label">金額</span>
+          <span class="value amount">NT$ <%= number_with_delimiter(@donation.amount.to_i) %></span>
+        </div>
+        <div class="info-row">
+          <span class="label">狀態</span>
+          <span class="value" style="color: <%= @donation.paid? ? '#28a745' : '#856404' %>;">
+            <%= @donation.status_name %>
+          </span>
+        </div>
+      </div>
+
+      <% if @awaiting_payment %>
+        <div class="payment-info">
+          <% case @donation.payment_method %>
+          <% when "virtual_account" %>
+            <h3>虛擬帳號繳費資訊</h3>
+            <p>銀行代碼：<span class="code"><%= @donation.atm_bank_code %></span></p>
+            <p>虛擬帳號：<span class="code"><%= @donation.atm_v_account %></span></p>
+          <% when "cvs_code" %>
+            <h3>超商代碼繳費資訊</h3>
+            <p>繳費代碼：<span class="code"><%= @donation.cvs_payment_no %></span></p>
+            <p style="font-size: 0.85rem; color: #666;">請至全家、萊爾富、OK超商，告知店員「代碼繳費」</p>
+          <% when "cvs_barcode" %>
+            <h3>超商條碼繳費資訊</h3>
+            <div style="background: #fff; padding: 15px; border-radius: 8px; text-align: center;">
+              <svg id="barcode1"></svg>
+              <p style="font-size: 0.75rem; color: #666; margin: 5px 0 15px;"><%= @donation.cvs_barcode_1 %></p>
+              <svg id="barcode2"></svg>
+              <p style="font-size: 0.75rem; color: #666; margin: 5px 0 15px;"><%= @donation.cvs_barcode_2 %></p>
+              <svg id="barcode3"></svg>
+              <p style="font-size: 0.75rem; color: #666; margin: 5px 0;"><%= @donation.cvs_barcode_3 %></p>
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                try {
+                  JsBarcode("#barcode1", "<%= @donation.cvs_barcode_1 %>", {format: "CODE39", width: 1.5, height: 50, displayValue: false});
+                  JsBarcode("#barcode2", "<%= @donation.cvs_barcode_2 %>", {format: "CODE39", width: 1.5, height: 50, displayValue: false});
+                  JsBarcode("#barcode3", "<%= @donation.cvs_barcode_3 %>", {format: "CODE39", width: 1.5, height: 50, displayValue: false});
+                } catch(e) { console.error('Barcode error:', e); }
+              });
+            </script>
+            <p style="font-size: 0.85rem; color: #666; margin-top: 10px;">請至全家、萊爾富、OK超商，使用條碼繳費</p>
+          <% end %>
+          <% if @donation.payment_expire_date.present? %>
+            <p class="expire">繳費期限：<%= @donation.payment_expire_date.strftime("%Y/%m/%d %H:%M") %></p>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <a href="/" class="btn">返回首頁</a>
+
+    <% if @trade_no.present? %>
+      <p class="trade-no">交易編號：<%= @trade_no %></p>
+    <% elsif @donation&.ecpay_trade_no.present? %>
+      <p class="trade-no">交易編號：<%= @donation.ecpay_trade_no %></p>
+    <% end %>
+  </div>
+</body>
+</html>
