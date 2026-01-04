@@ -48,7 +48,7 @@
   <div class="container">
     <div class="spinner"></div>
     <h1>正在導向付款頁面</h1>
-    <p>請稍候，系統正在將您導向綠界金流...</p>
+    <p>請稍候，系統正在將您導向金流付款頁面...</p>
 
     <div class="amount">NT$ <%= number_with_delimiter(@donation.amount.to_i) %></div>
 
@@ -71,10 +71,14 @@
   <%= @payment_form_html.html_safe %>
 
   <script>
-    // 自動提交表單導向綠界
+    // 自動提交表單導向金流
     document.addEventListener('DOMContentLoaded', function() {
       setTimeout(function() {
-        document.getElementById('ecpay-form').submit();
+        // 找到頁面上的付款表單（可能是 ecpay-form 或 newebpay-form）
+        var form = document.querySelector('form[id$="-form"]');
+        if (form) {
+          form.submit();
+        }
       }, 1500);
     });
   </script>

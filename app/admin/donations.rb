@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 ActiveAdmin.register Donation do
   menu priority: 1, label: "捐獻管理"
 
@@ -5,62 +7,55 @@ ActiveAdmin.register Donation do
   permit_params :donation_type, :amount, :donor_name, :phone, :email,
                 :prayer, :status, :payment_method, :paid_at, :notes, :created_by, :needs_receipt
 
-  # 篩選器
+  # 篩選器（精簡為常用的）
   filter :donation_type, as: :select, collection: -> {
     Donation.donation_types.map { |k, v| [I18n.t("donation_types.#{k}"), k] }
-  }, label: "捐款類型"
+  }, label: "類型"
   filter :status, as: :select, collection: -> {
     Donation.statuses.map { |k, v| [I18n.t("donation_statuses.#{k}"), k] }
   }, label: "狀態"
-  filter :payment_method, as: :select, collection: -> {
-    Donation.payment_methods.map { |k, v| [I18n.t("payment_methods.#{k}"), k] }
-  }, label: "付款方式"
-  filter :donor_name, label: "功德芳名"
-  filter :phone, label: "電話"
-  filter :needs_receipt, as: :boolean, label: "需要收據"
-  filter :ecpay_trade_no, label: "綠界交易編號"
-  filter :merchant_trade_no, label: "商店訂單編號"
+  filter :gateway_name, as: :select, collection: -> {
+    [["綠界", "ecpay"], ["藍新", "newebpay"]]
+  }, label: "金流商"
+  filter :donor_name_cont, label: "芳名"
   filter :created_at, label: "建立時間"
-  filter :paid_at, label: "付款時間"
   filter :amount, label: "金額"
 
-  # 列表頁
+  # 列表頁（精簡欄位）
   index do
     selectable_column
     id_column
-    column "捐款類型", :donation_type do |d|
+    column "類型", :donation_type, sortable: :donation_type do |d|
       I18n.t("donation_types.#{d.donation_type}")
     end
-    column "金額", :amount do |d|
-      number_to_currency(d.amount, unit: "NT$ ", precision: 0)
+    column "金額", :amount, sortable: :amount do |d|
+      number_to_currency(d.amount, unit: "$", precision: 0)
     end
-    column "功德芳名", :donor_name
-    column "收據", :needs_receipt do |d|
-      if d.needs_receipt?
-        status_tag "需要", class: "yes"
-      else
-        span "-", style: "color: #999;"
-      end
-    end
-    column "付款方式", :payment_method do |d|
-      d.payment_method.present? ? I18n.t("payment_methods.#{d.payment_method}") : "-"
-    end
-    column "狀態", :status do |d|
+    column "芳名", :donor_name
+    column "狀態", :status, sortable: :status do |d|
       case d.status
       when "paid"
-        status_tag I18n.t("donation_statuses.#{d.status}"), class: "green"
+        status_tag "已付款", class: "green"
       when "awaiting_payment"
-        status_tag I18n.t("donation_statuses.#{d.status}"), class: "orange"
+        status_tag "待繳費", class: "orange"
       when "cancelled"
-        status_tag I18n.t("donation_statuses.#{d.status}"), class: "red"
+        status_tag "取消", class: "red"
       else
-        status_tag I18n.t("donation_statuses.#{d.status}")
+        status_tag "待開單"
       end
     end
-    column "綠界編號", :ecpay_trade_no do |d|
-      d.ecpay_trade_no.presence || "-"
+    column "金流", :gateway_name do |d|
+      if d.gateway_name == "ecpay"
+        status_tag "綠界", class: "green"
+      elsif d.gateway_name == "newebpay"
+        status_tag "藍新", class: "blue"
+      else
+        "-"
+      end
     end
-    column "建立時間", :created_at
+    column "建立", :created_at, sortable: :created_at do |d|
+      d.created_at.strftime("%m/%d %H:%M")
+    end
     actions
   end
 
@@ -104,21 +99,32 @@ ActiveAdmin.register Donation do
       row "更新時間", &:updated_at
     end
 
-    # 綠界交易資訊
-    if resource.ecpay_trade_no.present? || resource.merchant_trade_no.present?
-      panel "綠界交易資訊" do
+    # 金流交易資訊
+    if resource.gateway_trade_no.present? || resource.merchant_trade_no.present?
+      panel "金流交易資訊" do
         attributes_table_for resource do
-          row "商店訂單編號", &:merchant_trade_no
-          row "綠界交易編號", &:ecpay_trade_no
-          row "交易狀態碼", &:ecpay_rtn_code
-          row "交易訊息", &:ecpay_rtn_msg
-          row "實際付款方式", &:ecpay_payment_type
-          row "交易金額" do |d|
-            d.ecpay_trade_amt.present? ? number_to_currency(d.ecpay_trade_amt, unit: "NT$ ", precision: 0) : "-"
+          row "金流商" do |d|
+            if d.gateway_name.present?
+              case d.gateway_name
+              when "ecpay" then status_tag "綠界 ECPay", class: "green"
+              when "newebpay" then status_tag "藍新 Newebpay", class: "blue"
+              else d.gateway_name
+              end
+            else
+              "-"
+            end
           end
-          row "綠界付款時間", &:ecpay_payment_date
+          row "商店訂單編號", &:merchant_trade_no
+          row "金流交易編號", &:gateway_trade_no
+          row "交易狀態碼", &:gateway_rtn_code
+          row "交易訊息", &:gateway_rtn_msg
+          row "實際付款方式", &:gateway_payment_type
+          row "交易金額" do |d|
+            d.gateway_trade_amt.present? ? number_to_currency(d.gateway_trade_amt, unit: "NT$ ", precision: 0) : "-"
+          end
+          row "金流付款時間", &:gateway_payment_date
           row "模擬付款" do |d|
-            d.ecpay_simulate_paid? ? status_tag("是", class: "warning") : "否"
+            d.gateway_simulate_paid? ? status_tag("是", class: "warning") : "否"
           end
         end
       end
@@ -185,7 +191,7 @@ ActiveAdmin.register Donation do
 
     panel "快速操作" do
       if resource.pending?
-        para link_to "前往付款（綠界）", payment_checkout_path(resource),
+        para link_to "前往付款", payment_checkout_path(resource),
                      class: "button", target: "_blank"
         para link_to "手動標記為已付款", mark_paid_admin_donation_path(resource),
                      method: :put, class: "button", data: { confirm: "確定要手動標記為已付款嗎？" }
@@ -193,7 +199,7 @@ ActiveAdmin.register Donation do
                      method: :put, class: "button", data: { confirm: "確定要取消此捐獻嗎？" }
       elsif resource.awaiting_payment?
         para link_to "手動標記為已付款", mark_paid_admin_donation_path(resource),
-                     method: :put, class: "button", data: { confirm: "確定要手動標記為已付款嗎？（通常應等待綠界通知）" }
+                     method: :put, class: "button", data: { confirm: "確定要手動標記為已付款嗎？（通常應等待金流通知）" }
         para link_to "取消此捐獻", cancel_admin_donation_path(resource),
                      method: :put, class: "button", data: { confirm: "確定要取消此捐獻嗎？" }
       end
@@ -257,10 +263,11 @@ ActiveAdmin.register Donation do
     column("付款方式") { |d| d.payment_method.present? ? I18n.t("payment_methods.#{d.payment_method}") : "" }
     column("付款時間") { |d| d.paid_at }
     column("建立來源") { |d| I18n.t("created_by.#{d.created_by}") }
-    column("綠界交易編號") { |d| d.ecpay_trade_no }
+    column("金流商") { |d| d.gateway_name_display }
+    column("金流交易編號") { |d| d.gateway_trade_no }
     column("商店訂單編號") { |d| d.merchant_trade_no }
-    column("綠界交易金額") { |d| d.ecpay_trade_amt }
-    column("綠界付款時間") { |d| d.ecpay_payment_date }
+    column("金流交易金額") { |d| d.gateway_trade_amt }
+    column("金流付款時間") { |d| d.gateway_payment_date }
     column("建立時間") { |d| d.created_at }
   end
 end

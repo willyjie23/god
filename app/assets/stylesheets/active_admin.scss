@@ -37,4 +37,96 @@
     background: #6c757d !important;
     color: white !important;
   }
+
+  &.blue {
+    background: #007bff !important;
+    color: white !important;
+  }
+}
+
+// 捐獻管理頁面 - Filter 在上方，表格全寬
+// ActiveAdmin 3.x 使用 data attributes 而非 body class
+// 同時支援舊版 (body class) 和新版 (data attribute) 選擇器
+body.admin_donations.index,
+body[data-action="admin/donations#index"],
+body.active_admin[data-aa-page="admin/donations#index"] {
+  // 主要內容區塊改為 flex column
+  #active_admin_content {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  // Sidebar（Filter）移到上方
+  #sidebar {
+    width: 100% !important;
+    float: none !important;
+    margin: 0 0 20px 0 !important;
+    order: -1 !important;
+  }
+
+  // Filter 表單水平排列
+  .filter_form {
+    .filter_form_field {
+      display: inline-block !important;
+      width: auto !important;
+      margin-right: 15px !important;
+      margin-bottom: 10px !important;
+      vertical-align: bottom;
+
+      label {
+        display: block;
+        font-size: 11px;
+        margin-bottom: 3px;
+      }
+
+      input[type="text"], select {
+        min-width: 120px;
+      }
+    }
+
+    .buttons {
+      display: inline-block !important;
+      vertical-align: bottom;
+      margin-bottom: 10px;
+    }
+  }
+
+  // 主內容區全寬
+  #main_content_wrapper {
+    width: 100% !important;
+    float: none !important;
+    margin: 0 !important;
+  }
+
+  #main_content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  // 表格全寬
+  .index_table {
+    width: 100% !important;
+  }
+}
+
+// 備用：直接對 donations index 頁面套用樣式（更廣泛匹配）
+.active_admin.admin_donations.index,
+.logged_in.admin_donations.index {
+  #active_admin_content {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  #sidebar {
+    width: 100% !important;
+    float: none !important;
+    margin: 0 0 20px 0 !important;
+    order: -1 !important;
+  }
+
+  #main_content_wrapper {
+    width: 100% !important;
+    float: none !important;
+    margin: 0 !important;
+  }
 }

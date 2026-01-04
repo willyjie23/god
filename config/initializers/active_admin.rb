@@ -327,7 +327,54 @@ ActiveAdmin.setup do |config|
   # You can add your own content to the site head like analytics. Make sure
   # you only pass content you trust.
   #
-  # config.head = ''.html_safe
+  # 捐獻管理頁面 - Filter 在上方的樣式
+  config.head = <<-CSS.html_safe
+    <style>
+      /* 捐獻管理頁面 - Filter 在上方，表格全寬 */
+      body.admin_donations.index #active_admin_content,
+      body.active_admin.admin_donations #active_admin_content {
+        display: flex !important;
+        flex-direction: column !important;
+      }
+      body.admin_donations.index #sidebar,
+      body.active_admin.admin_donations #sidebar {
+        width: 100% !important;
+        float: none !important;
+        margin: 0 0 20px 0 !important;
+        order: -1 !important;
+      }
+      body.admin_donations.index .filter_form .filter_form_field,
+      body.active_admin.admin_donations .filter_form .filter_form_field {
+        display: inline-block !important;
+        width: auto !important;
+        margin-right: 15px !important;
+        margin-bottom: 10px !important;
+        vertical-align: bottom;
+      }
+      body.admin_donations.index .filter_form .filter_form_field label,
+      body.active_admin.admin_donations .filter_form .filter_form_field label {
+        display: block;
+        font-size: 11px;
+        margin-bottom: 3px;
+      }
+      body.admin_donations.index .filter_form .buttons,
+      body.active_admin.admin_donations .filter_form .buttons {
+        display: inline-block !important;
+        vertical-align: bottom;
+        margin-bottom: 10px;
+      }
+      body.admin_donations.index #main_content_wrapper,
+      body.active_admin.admin_donations #main_content_wrapper {
+        width: 100% !important;
+        float: none !important;
+        margin: 0 !important;
+      }
+      body.admin_donations.index .index_table,
+      body.active_admin.admin_donations .index_table {
+        width: 100% !important;
+      }
+    </style>
+  CSS
 
   # == Footer
   #

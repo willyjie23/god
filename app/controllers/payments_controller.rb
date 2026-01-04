@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 class PaymentsController < ActionController::Base
-  # 綠界 callback 不需要 CSRF 驗證
+  # 金流 callback 不需要 CSRF 驗證
   skip_forgery_protection only: [ :notify, :result, :payment_info ]
 
   # GET /payments/:donation_id/checkout
-  # 導向至綠界付款頁面
+  # 導向至金流付款頁面
   def checkout
     @donation = Donation.find(params[:donation_id])
 
@@ -14,86 +14,96 @@ class PaymentsController < ActionController::Base
       return
     end
 
-    # 儲存 merchant_trade_no 以便後續對照
-    trade_no = EcpayService.generate_trade_no(@donation)
-    @donation.update!(merchant_trade_no: trade_no)
+    @gateway = PaymentGateway::Factory.current
 
-    @payment_form_html = EcpayService.payment_form_html(
+    # 儲存 merchant_trade_no 和 gateway_name 以便後續對照
+    trade_no = @gateway.generate_trade_no(@donation)
+    @donation.update!(
+      merchant_trade_no: trade_no,
+      gateway_name: @gateway.gateway_name
+    )
+
+    @payment_form_html = @gateway.payment_form_html(
       @donation,
       return_url: payment_result_url,
       notify_url: payment_notify_url,
       client_back_url: root_url,
-      payment_info_url: payment_info_url  # ATM/CVS 取號結果
+      payment_info_url: payment_info_url
     )
 
     render :checkout, layout: false
   end
 
   # POST /payments/notify
-  # 綠界付款完成通知 (ReturnURL) - 背景通知
-  # 必須回傳 "1|OK" 表示收到
+  # 金流付款完成通知 (背景通知)
+  # 必須回傳正確的回應
   def notify
-    Rails.logger.info "[ECPay Notify] Received: #{params.to_unsafe_h}"
-
-    # 暫時跳過驗證進行測試
-    verification_result = EcpayService.verify_callback(params)
-    Rails.logger.info "[ECPay Notify] Verification result: #{verification_result}"
-
-    unless verification_result
-      Rails.logger.error "[ECPay Notify] CheckMacValue verification failed - but continuing for debug"
-      # 暫時不擋住，繼續處理（測試用）
-    end
+    Rails.logger.info "[Payment Notify] Received: #{params.to_unsafe_h}"
 
     donation = find_donation_by_params(params)
     if donation.nil?
-      Rails.logger.error "[ECPay Notify] Donation not found"
+      Rails.logger.error "[Payment Notify] Donation not found"
       render plain: "0|Donation Not Found"
       return
     end
 
-    if EcpayService.payment_success?(params)
-      donation.mark_as_paid_by_ecpay!(params)
-      Rails.logger.info "[ECPay Notify] Donation #{donation.id} marked as paid"
-    else
-      Rails.logger.warn "[ECPay Notify] Payment not successful: #{params['RtnMsg']}"
+    gateway = resolve_gateway(donation, params)
+
+    # 驗證回調簽章
+    verification_result = gateway.verify_callback(params)
+    Rails.logger.info "[Payment Notify] Verification result: #{verification_result}"
+
+    unless verification_result
+      Rails.logger.error "[Payment Notify] Verification failed - but continuing for debug"
+      # 暫時不擋住（測試用）
     end
 
-    render plain: "1|OK"
+    result = gateway.parse_callback(params)
+
+    if result.success?
+      donation.save_payment_result!(result)
+      Rails.logger.info "[Payment Notify] Donation #{donation.id} marked as paid"
+    else
+      Rails.logger.warn "[Payment Notify] Payment not successful: #{result.rtn_msg}"
+    end
+
+    render plain: response_for_gateway(gateway)
   end
 
   # POST /payments/payment_info
-  # ATM/CVS 取號結果通知 (PaymentInfoURL)
-  # 必須回傳 "1|OK"
+  # ATM/CVS 取號結果通知
+  # 必須回傳正確的回應
   def payment_info
-    Rails.logger.info "[ECPay PaymentInfo] Received: #{params.to_unsafe_h}"
-
-    # 暫時跳過驗證進行測試
-    verification_result = EcpayService.verify_callback(params)
-    Rails.logger.info "[ECPay PaymentInfo] Verification result: #{verification_result}"
-
-    unless verification_result
-      Rails.logger.error "[ECPay PaymentInfo] CheckMacValue verification failed - but continuing for debug"
-      # 暫時不擋住，繼續處理（測試用）
-    end
+    Rails.logger.info "[Payment Info] Received: #{params.to_unsafe_h}"
 
     donation = find_donation_by_params(params)
     if donation.nil?
-      Rails.logger.error "[ECPay PaymentInfo] Donation not found"
+      Rails.logger.error "[Payment Info] Donation not found"
       render plain: "0|Donation Not Found"
       return
     end
 
-    # 儲存取號資訊
-    donation.save_ecpay_payment_info!(params)
-    Rails.logger.info "[ECPay PaymentInfo] Donation #{donation.id} payment info saved"
+    gateway = resolve_gateway(donation, params)
 
-    render plain: "1|OK"
+    # 驗證回調簽章
+    verification_result = gateway.verify_callback(params)
+    Rails.logger.info "[Payment Info] Verification result: #{verification_result}"
+
+    unless verification_result
+      Rails.logger.error "[Payment Info] Verification failed - but continuing for debug"
+    end
+
+    result = gateway.parse_payment_info_callback(params)
+    donation.save_payment_info!(result)
+    Rails.logger.info "[Payment Info] Donation #{donation.id} payment info saved"
+
+    render plain: response_for_gateway(gateway)
   end
 
   # POST /payments/result
-  # 使用者付款完成後跳轉 (OrderResultURL)
+  # 使用者付款完成後跳轉
   def result
-    Rails.logger.info "[ECPay Result] Received: #{params.to_unsafe_h}"
+    Rails.logger.info "[Payment Result] Received: #{params.to_unsafe_h}"
 
     donation = find_donation_by_params(params)
 
@@ -102,8 +112,8 @@ class PaymentsController < ActionController::Base
       return
     end
 
-    @donation = donation.reload  # 重新載入以取得最新狀態
-    @trade_no = params["TradeNo"]
+    @donation = donation.reload
+    gateway = resolve_gateway(@donation, params)
 
     # 優先以資料庫狀態為準（notify callback 可能已更新）
     if @donation.paid?
@@ -113,33 +123,91 @@ class PaymentsController < ActionController::Base
       @success = true
       @awaiting_payment = true
       @message = "取號成功！請於期限內完成繳費。"
-    elsif EcpayService.payment_success?(params)
-      # 信用卡即時付款成功（notify 可能尚未處理）
-      @success = true
-      @message = "感謝您的捐獻！付款已完成。"
-      donation.mark_as_paid_by_ecpay!(params)
-    elsif params["RtnCode"].to_s == "2" || params["RtnCode"].to_s == "10100073"
-      # ATM/CVS 取號成功
-      @success = true
-      @awaiting_payment = true
-      @message = "取號成功！請於期限內完成繳費。"
-      donation.save_ecpay_payment_info!(params)
     else
-      @success = false
-      @message = "付款未完成：#{params['RtnMsg']}"
+      # 解析回調結果
+      result = gateway.parse_callback(params)
+      if result.success?
+        @success = true
+        @message = "感謝您的捐獻！付款已完成。"
+        donation.save_payment_result!(result)
+      elsif is_payment_info_callback?(gateway, params)
+        # ATM/CVS 取號成功
+        @success = true
+        @awaiting_payment = true
+        @message = "取號成功！請於期限內完成繳費。"
+        info_result = gateway.parse_payment_info_callback(params)
+        donation.save_payment_info!(info_result)
+      else
+        @success = false
+        @message = "付款未完成：#{result.rtn_msg}"
+      end
     end
 
+    @trade_no = @donation.gateway_trade_no
     render :result, layout: false
   end
 
   private
 
   def find_donation_by_params(params)
-    # 優先用 CustomField1 (donation_id)
+    # ECPay 格式
     if params["CustomField1"].present?
-      Donation.find_by(id: params["CustomField1"])
-    elsif params["MerchantTradeNo"].present?
-      Donation.find_by(merchant_trade_no: params["MerchantTradeNo"])
+      return Donation.find_by(id: params["CustomField1"])
+    end
+    if params["MerchantTradeNo"].present?
+      return Donation.find_by(merchant_trade_no: params["MerchantTradeNo"])
+    end
+
+    # Newebpay 格式（需解密 TradeInfo）
+    if params["TradeInfo"].present?
+      begin
+        result = PaymentGateway::Newebpay.parse_callback(params)
+        return Donation.find_by(merchant_trade_no: result.merchant_trade_no)
+      rescue StandardError => e
+        Rails.logger.error "[Payment] Failed to parse Newebpay TradeInfo: #{e.message}"
+      end
+    end
+
+    nil
+  end
+
+  def resolve_gateway(donation, params)
+    # 優先從 donation 取得
+    if donation&.gateway_name.present?
+      return PaymentGateway::Factory.build(donation.gateway_name)
+    end
+
+    # 根據參數格式判斷
+    if params["TradeInfo"].present?
+      PaymentGateway::Newebpay
+    else
+      PaymentGateway::Ecpay
+    end
+  end
+
+  def response_for_gateway(gateway)
+    case gateway.gateway_name
+    when "ecpay"
+      "1|OK"
+    when "newebpay"
+      "SUCCESS"
+    else
+      "OK"
+    end
+  end
+
+  # 判斷是否為取號回調（ATM/CVS）
+  def is_payment_info_callback?(gateway, params)
+    case gateway.gateway_name
+    when "ecpay"
+      # RtnCode 2 或 10100073 表示 ATM/CVS 取號成功
+      %w[2 10100073].include?(params["RtnCode"].to_s)
+    when "newebpay"
+      # 藍新取號和付款回調格式相同，需判斷 PaymentType
+      result = gateway.parse_callback(params)
+      %w[VACC CVS BARCODE].include?(result.payment_type) && result.rtn_code != "SUCCESS"
+    else
+      false
     end
   end
 end

@@ -1,12 +1,14 @@
+# frozen_string_literal: true
+
 class Donation < ApplicationRecord
   # Ransack 搜尋白名單（ActiveAdmin 需要）
   def self.ransackable_attributes(auth_object = nil)
     %w[
       id donation_type amount donor_name phone email prayer status payment_method
       paid_at notes created_by needs_receipt created_at updated_at
-      ecpay_trade_no merchant_trade_no ecpay_rtn_code ecpay_payment_type
-      ecpay_payment_date ecpay_simulate_paid atm_bank_code atm_v_account
-      cvs_payment_no payment_expire_date
+      gateway_name gateway_trade_no merchant_trade_no gateway_rtn_code
+      gateway_payment_type gateway_payment_date gateway_simulate_paid
+      atm_bank_code atm_v_account cvs_payment_no payment_expire_date
     ]
   end
 
@@ -65,71 +67,46 @@ class Donation < ApplicationRecord
     I18n.t("donation_statuses.#{status}", default: status)
   end
 
-  # 儲存綠界回傳的取號資訊 (ATM/CVS)
-  def save_ecpay_payment_info!(params)
-    attrs = {
-      merchant_trade_no: params["MerchantTradeNo"],
-      ecpay_trade_no: params["TradeNo"],
-      ecpay_rtn_code: params["RtnCode"],
-      ecpay_rtn_msg: params["RtnMsg"],
-      ecpay_trade_amt: params["TradeAmt"]&.to_i,
+  # 金流商中文名稱
+  def gateway_name_display
+    case gateway_name
+    when "ecpay" then "綠界 ECPay"
+    when "newebpay" then "藍新 Newebpay"
+    else gateway_name
+    end
+  end
+
+  # 通用的儲存付款結果方法
+  def save_payment_result!(result)
+    attrs = result.to_payment_attrs.merge(
+      status: :paid,
+      paid_at: Time.current
+    )
+
+    # 處理 ATM/CVS 相關欄位
+    if result.payment_no.present?
+      attrs[:cvs_payment_no] = result.payment_no
+    end
+    if result.barcode_1.present?
+      attrs[:cvs_barcode_1] = result.barcode_1
+      attrs[:cvs_barcode_2] = result.barcode_2
+      attrs[:cvs_barcode_3] = result.barcode_3
+    end
+
+    update!(attrs)
+  end
+
+  # 通用的儲存取號資訊方法
+  def save_payment_info!(result)
+    attrs = result.to_payment_info_attrs.merge(
       status: :awaiting_payment
-    }
-
-    # ATM 虛擬帳號
-    if params["BankCode"].present?
-      attrs[:atm_bank_code] = params["BankCode"]
-      attrs[:atm_v_account] = params["vAccount"]
-      attrs[:payment_expire_date] = parse_ecpay_date(params["ExpireDate"])
-    end
-
-    # CVS 超商代碼
-    if params["PaymentNo"].present?
-      attrs[:cvs_payment_no] = params["PaymentNo"]
-      attrs[:payment_expire_date] = parse_ecpay_date(params["ExpireDate"])
-    end
-
-    # CVS 超商條碼
-    if params["Barcode1"].present?
-      attrs[:cvs_barcode_1] = params["Barcode1"]
-      attrs[:cvs_barcode_2] = params["Barcode2"]
-      attrs[:cvs_barcode_3] = params["Barcode3"]
-      attrs[:payment_expire_date] = parse_ecpay_date(params["ExpireDate"])
-    end
-
+    )
     update!(attrs)
   end
 
   # 手動標記為已付款 (後台使用)
   def mark_as_paid!
     update!(status: :paid, paid_at: Time.current)
-  end
-
-  # 標記為已付款 (綠界付款完成通知)
-  def mark_as_paid_by_ecpay!(params)
-    attrs = {
-      status: :paid,
-      paid_at: Time.current,
-      ecpay_trade_no: params["TradeNo"],
-      ecpay_rtn_code: params["RtnCode"],
-      ecpay_rtn_msg: params["RtnMsg"],
-      ecpay_payment_type: params["PaymentType"],
-      ecpay_payment_date: parse_ecpay_date(params["PaymentDate"]),
-      ecpay_trade_amt: params["TradeAmt"]&.to_i,
-      ecpay_simulate_paid: params["SimulatePaid"] == "1"
-    }
-
-    # 超商代碼繳費資訊
-    attrs[:cvs_payment_no] = params["PaymentNo"] if params["PaymentNo"].present?
-
-    # 超商條碼繳費資訊
-    if params["Barcode1"].present?
-      attrs[:cvs_barcode_1] = params["Barcode1"]
-      attrs[:cvs_barcode_2] = params["Barcode2"]
-      attrs[:cvs_barcode_3] = params["Barcode3"]
-    end
-
-    update!(attrs)
   end
 
   # 付款方式中文名稱
@@ -149,14 +126,5 @@ class Donation < ApplicationRecord
     else
       nil
     end
-  end
-
-  private
-
-  def parse_ecpay_date(date_str)
-    return nil if date_str.blank?
-    Time.zone.parse(date_str)
-  rescue
-    nil
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_04_132840) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_04_181532) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -52,14 +52,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_04_132840) do
     t.string "cvs_payment_no"
     t.string "donation_type", null: false
     t.string "donor_name", null: false
-    t.datetime "ecpay_payment_date"
-    t.string "ecpay_payment_type"
-    t.string "ecpay_rtn_code"
-    t.string "ecpay_rtn_msg"
-    t.boolean "ecpay_simulate_paid", default: false
-    t.integer "ecpay_trade_amt"
-    t.string "ecpay_trade_no"
     t.string "email"
+    t.string "gateway_name"
+    t.datetime "gateway_payment_date"
+    t.string "gateway_payment_type"
+    t.string "gateway_rtn_code"
+    t.string "gateway_rtn_msg"
+    t.boolean "gateway_simulate_paid", default: false
+    t.integer "gateway_trade_amt"
+    t.string "gateway_trade_no"
     t.string "merchant_trade_no"
     t.boolean "needs_receipt", default: false, null: false
     t.text "notes"
@@ -72,9 +73,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_04_132840) do
     t.datetime "updated_at", null: false
     t.index ["created_at"], name: "index_donations_on_created_at"
     t.index ["donation_type"], name: "index_donations_on_donation_type"
-    t.index ["ecpay_payment_type"], name: "index_donations_on_ecpay_payment_type"
-    t.index ["ecpay_trade_no"], name: "index_donations_on_ecpay_trade_no"
+    t.index ["gateway_name"], name: "index_donations_on_gateway_name"
+    t.index ["gateway_payment_type"], name: "index_donations_on_gateway_payment_type"
+    t.index ["gateway_trade_no"], name: "index_donations_on_gateway_trade_no"
     t.index ["merchant_trade_no"], name: "index_donations_on_merchant_trade_no"
     t.index ["status"], name: "index_donations_on_status"
+  end
+
+  create_table "site_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "key", null: false
+    t.datetime "updated_at", null: false
+    t.text "value"
+    t.string "value_type", default: "string"
+    t.index ["key"], name: "index_site_settings_on_key", unique: true
   end
 end
