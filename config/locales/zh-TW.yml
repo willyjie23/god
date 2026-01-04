@@ -1,0 +1,137 @@
+zh-TW:
+  date:
+    formats:
+      default: "%Y-%m-%d"
+      short: "%m/%d"
+      long: "%Y年%m月%d日"
+    day_names: [星期日, 星期一, 星期二, 星期三, 星期四, 星期五, 星期六]
+    abbr_day_names: [日, 一, 二, 三, 四, 五, 六]
+    month_names: [~, 一月, 二月, 三月, 四月, 五月, 六月, 七月, 八月, 九月, 十月, 十一月, 十二月]
+    abbr_month_names: [~, 1月, 2月, 3月, 4月, 5月, 6月, 7月, 8月, 9月, 10月, 11月, 12月]
+
+  time:
+    formats:
+      default: "%Y-%m-%d %H:%M:%S"
+      short: "%m/%d %H:%M"
+      long: "%Y年%m月%d日 %H:%M"
+
+  donation_types:
+    light_peace: "平安燈"
+    light_bright: "光明燈"
+    light_tai: "太歲燈"
+    incense: "香油錢"
+    merit: "功德金"
+    construction: "建設基金"
+
+  donation_statuses:
+    pending: "待付款"
+    paid: "已付款"
+    cancelled: "已取消"
+
+  created_by:
+    frontend: "前台"
+    admin: "後台"
+
+  payment_methods:
+    credit_card: "信用卡"
+    cvs_barcode: "超商條碼"
+    cvs_code: "超商代碼"
+    virtual_account: "虛擬帳號"
+
+  errors:
+    messages:
+      blank: "不能為空白"
+      invalid: "格式不正確"
+      taken: "已被使用"
+      too_short: "太短了（最少 %{count} 個字）"
+      too_long: "太長了（最多 %{count} 個字）"
+
+  activerecord:
+    errors:
+      messages:
+        blank: "不能為空白"
+        invalid: "格式不正確"
+        not_a_number: "不是有效的數字"
+        greater_than: "必須大於 %{count}"
+    models:
+      donation: "捐獻紀錄"
+      admin_user: "管理員"
+    attributes:
+      donation:
+        donation_type: "捐款類型"
+        amount: "金額"
+        donor_name: "功德芳名"
+        phone: "聯絡電話"
+        email: "電子信箱"
+        prayer: "祈福內容"
+        status: "狀態"
+        payment_method: "付款方式"
+        paid_at: "付款時間"
+        notes: "備註"
+        created_by: "建立來源"
+        needs_receipt: "需要收據"
+        created_at: "建立時間"
+        updated_at: "更新時間"
+
+  devise:
+    sessions:
+      signed_in: "登入成功"
+      signed_out: "已登出"
+      already_signed_out: "已登出"
+    failure:
+      unauthenticated: "請先登入"
+      invalid: "電子郵件或密碼錯誤"
+    passwords:
+      send_instructions: "密碼重設信件已寄出"
+
+  active_admin:
+    dashboard: "儀表板"
+    dashboard_welcome:
+      welcome: "歡迎使用佳里廣澤信仰宗教協會後台管理系統"
+      call_to_action: "開始管理捐獻紀錄"
+    view: "檢視"
+    edit: "編輯"
+    delete: "刪除"
+    new_model: "新增 %{model}"
+    create_model: "新增 %{model}"
+    edit_model: "編輯 %{model}"
+    delete_model: "刪除 %{model}"
+    details: "詳細資料"
+    cancel: "取消"
+    empty: "無資料"
+    search: "搜尋"
+    filter: "篩選"
+    clear_filters: "清除篩選"
+    has_many_remove: "刪除"
+    has_many_new: "新增"
+    filters:
+      predicates:
+        from: "從"
+        to: "到"
+    comments:
+      title: "備註"
+      add: "新增備註"
+      delete: "刪除備註"
+      no_comments_yet: "尚無備註"
+    logout: "登出"
+    sidebars:
+      filters: "篩選條件"
+    batch_actions:
+      link: "批次作業"
+      action_label: "%{title} 已選擇的項目"
+      labels:
+        destroy: "刪除"
+      selection_toggle_explanation: "(切換選取)"
+      succesfully_destroyed:
+        one: "已成功刪除 1 筆 %{model}"
+        other: "已成功刪除 %{count} 筆 %{model}"
+    main_content: "尚無 %{model}"
+    pagination:
+      one: "顯示 <b>1</b> 筆 %{model}"
+      one_page: "顯示 <b>全部 %{n}</b> 筆 %{model}"
+      multiple: "顯示第 <b>%{from}&nbsp;-&nbsp;%{to}</b> 筆，共 <b>%{total}</b> 筆 %{model}"
+      multiple_without_total: "顯示第 <b>%{from}&nbsp;-&nbsp;%{to}</b> 筆 %{model}"
+      per_page: "每頁顯示："
+      entry:
+        one: "筆資料"
+        other: "筆資料"
