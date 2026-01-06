@@ -17,11 +17,13 @@ ActiveAdmin.register Donation do
   filter :gateway_name, as: :select, collection: -> {
     [["綠界", "ecpay"], ["藍新", "newebpay"]]
   }, label: "金流商"
+  filter :needs_receipt, as: :select, collection: [["是", true], ["否", false]], label: "需要收據"
   filter :donor_name_cont, label: "芳名"
+  filter :merchant_trade_no_cont, label: "金流單號"
   filter :created_at, label: "建立時間"
   filter :amount, label: "金額"
 
-  # 列表頁（精簡欄位）
+  # 列表頁
   index do
     selectable_column
     id_column
@@ -32,6 +34,13 @@ ActiveAdmin.register Donation do
       number_to_currency(d.amount, unit: "$", precision: 0)
     end
     column "芳名", :donor_name
+    column "收據", :needs_receipt, sortable: :needs_receipt do |d|
+      if d.needs_receipt?
+        status_tag "需要", class: "blue"
+      else
+        "-"
+      end
+    end
     column "狀態", :status, sortable: :status do |d|
       case d.status
       when "paid"
@@ -53,10 +62,26 @@ ActiveAdmin.register Donation do
         "-"
       end
     end
+    column "金流單號", :merchant_trade_no do |d|
+      d.merchant_trade_no.presence || "-"
+    end
     column "建立", :created_at, sortable: :created_at do |d|
       d.created_at.strftime("%m/%d %H:%M")
     end
     actions
+  end
+
+  # 顯示統計資訊（在 sidebar）
+  sidebar "統計資訊", only: :index, priority: 0 do
+    # 計算篩選後的總金額
+    total_amount = donations.except(:limit, :offset).sum(:amount)
+    total_count = donations.except(:limit, :offset).count
+
+    div style: "padding: 10px 0;" do
+      para "篩選結果：", style: "font-weight: bold; margin-bottom: 10px;"
+      para "共 #{total_count} 筆"
+      para "總金額：#{number_to_currency(total_amount, unit: 'NT$ ', precision: 0)}", style: "font-size: 1.2em; color: #c9a227; font-weight: bold;"
+    end
   end
 
   # 詳細頁
