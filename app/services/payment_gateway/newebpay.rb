@@ -33,7 +33,8 @@ module PaymentGateway
           donation,
           return_url: return_url,
           notify_url: notify_url,
-          client_back_url: client_back_url
+          client_back_url: client_back_url,
+          customer_url: payment_info_url  # ATM/CVS/BARCODE 取號結果通知
         )
 
         encrypted_trade_info = aes_encrypt(trade_info)
@@ -123,7 +124,7 @@ module PaymentGateway
       private
 
       # 建立 TradeInfo 參數
-      def build_trade_info(donation, return_url:, notify_url:, client_back_url:)
+      def build_trade_info(donation, return_url:, notify_url:, client_back_url:, customer_url: nil)
         trade_no = donation.merchant_trade_no || generate_trade_no(donation)
         payment_method = PAYMENT_TYPE_MAP[donation.payment_method] || "CREDIT"
 
@@ -149,10 +150,13 @@ module PaymentGateway
           params["CREDIT"] = 1
         when "VACC"
           params["VACC"] = 1
+          params["CustomerURL"] = customer_url if customer_url.present?
         when "CVS"
           params["CVS"] = 1
+          params["CustomerURL"] = customer_url if customer_url.present?
         when "BARCODE"
           params["BARCODE"] = 1
+          params["CustomerURL"] = customer_url if customer_url.present?
         end
 
         URI.encode_www_form(params)
@@ -166,13 +170,16 @@ module PaymentGateway
 
       # AES-256-CBC 加密
       def aes_encrypt(data)
+        key = config.hash_key.to_s.dup.force_encoding("ASCII-8BIT")
+        iv = config.hash_iv.to_s.dup.force_encoding("ASCII-8BIT")
+
         cipher = OpenSSL::Cipher.new("aes-256-cbc")
         cipher.encrypt
-        cipher.key = config.hash_key
-        cipher.iv = config.hash_iv
+        cipher.key = key
+        cipher.iv = iv
         cipher.padding = 0
 
-        # PKCS7 padding
+        # PKCS7 padding (block size = 32 for AES-256)
         pad_length = 32 - (data.bytesize % 32)
         padded_data = data + (pad_length.chr * pad_length)
 
@@ -182,10 +189,13 @@ module PaymentGateway
 
       # AES-256-CBC 解密
       def aes_decrypt(encrypted_hex)
+        key = config.hash_key.to_s.dup.force_encoding("ASCII-8BIT")
+        iv = config.hash_iv.to_s.dup.force_encoding("ASCII-8BIT")
+
         cipher = OpenSSL::Cipher.new("aes-256-cbc")
         cipher.decrypt
-        cipher.key = config.hash_key
-        cipher.iv = config.hash_iv
+        cipher.key = key
+        cipher.iv = iv
         cipher.padding = 0
 
         encrypted_data = [encrypted_hex].pack("H*")

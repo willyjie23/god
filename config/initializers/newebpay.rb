@@ -13,11 +13,10 @@ if Rails.env.production?
   Rails.application.config.newebpay.hash_iv = ENV.fetch("NEWEBPAY_HASH_IV")
   Rails.application.config.newebpay.api_url = "https://core.newebpay.com/MPG/mpg_gateway"
 else
-  # 測試環境 - 從環境變數讀取（需自行申請藍新測試商店）
-  # 申請網址: https://cwww.newebpay.com/
-  Rails.application.config.newebpay.merchant_id = ENV.fetch("NEWEBPAY_MERCHANT_ID", "")
-  Rails.application.config.newebpay.hash_key = ENV.fetch("NEWEBPAY_HASH_KEY", "")
-  Rails.application.config.newebpay.hash_iv = ENV.fetch("NEWEBPAY_HASH_IV", "")
+  # 測試環境 - 使用測試商店資料
+  Rails.application.config.newebpay.merchant_id = "MS357716166"
+  Rails.application.config.newebpay.hash_key = "WCIjMFz3FyyCpGK31iJGn2JdV9zydikI"
+  Rails.application.config.newebpay.hash_iv = "CTTibOlBaX9lJzQP"
   Rails.application.config.newebpay.api_url = "https://ccore.newebpay.com/MPG/mpg_gateway"
 end
 

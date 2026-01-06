@@ -172,8 +172,8 @@
 
     <% if @trade_no.present? %>
       <p class="trade-no">交易編號：<%= @trade_no %></p>
-    <% elsif @donation&.ecpay_trade_no.present? %>
-      <p class="trade-no">交易編號：<%= @donation.ecpay_trade_no %></p>
+    <% elsif @donation&.gateway_trade_no.present? %>
+      <p class="trade-no">交易編號：<%= @donation.gateway_trade_no %></p>
     <% end %>
   </div>
 </body>

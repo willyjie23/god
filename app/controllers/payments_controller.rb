@@ -123,20 +123,20 @@ class PaymentsController < ActionController::Base
       @success = true
       @awaiting_payment = true
       @message = "取號成功！請於期限內完成繳費。"
+    elsif is_payment_info_callback?(gateway, params)
+      # ATM/CVS/BARCODE 取號成功（優先判斷，因為藍新取號也回傳 SUCCESS）
+      @success = true
+      @awaiting_payment = true
+      @message = "取號成功！請於期限內完成繳費。"
+      info_result = gateway.parse_payment_info_callback(params)
+      donation.save_payment_info!(info_result)
     else
-      # 解析回調結果
+      # 解析回調結果（信用卡等即時付款）
       result = gateway.parse_callback(params)
       if result.success?
         @success = true
         @message = "感謝您的捐獻！付款已完成。"
         donation.save_payment_result!(result)
-      elsif is_payment_info_callback?(gateway, params)
-        # ATM/CVS 取號成功
-        @success = true
-        @awaiting_payment = true
-        @message = "取號成功！請於期限內完成繳費。"
-        info_result = gateway.parse_payment_info_callback(params)
-        donation.save_payment_info!(info_result)
       else
         @success = false
         @message = "付款未完成：#{result.rtn_msg}"
@@ -196,16 +196,17 @@ class PaymentsController < ActionController::Base
     end
   end
 
-  # 判斷是否為取號回調（ATM/CVS）
+  # 判斷是否為取號回調（ATM/CVS/BARCODE）
   def is_payment_info_callback?(gateway, params)
     case gateway.gateway_name
     when "ecpay"
       # RtnCode 2 或 10100073 表示 ATM/CVS 取號成功
       %w[2 10100073].include?(params["RtnCode"].to_s)
     when "newebpay"
-      # 藍新取號和付款回調格式相同，需判斷 PaymentType
+      # 藍新取號成功時 Status 也是 SUCCESS，需判斷 PaymentType
+      # VACC/CVS/BARCODE 類型即使 SUCCESS 也是取號成功（尚未付款）
       result = gateway.parse_callback(params)
-      %w[VACC CVS BARCODE].include?(result.payment_type) && result.rtn_code != "SUCCESS"
+      %w[VACC CVS BARCODE].include?(result.payment_type)
     else
       false
     end
