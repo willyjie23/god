@@ -18,12 +18,13 @@ class Donation < ApplicationRecord
 
   # Enums
   enum :donation_type, {
-    light_peace: "light_peace",       # 平安燈
+    light_peace: "light_peace",       # 財力燈
     light_bright: "light_bright",     # 光明燈
     light_tai: "light_tai",           # 太歲燈
     incense: "incense",               # 香油錢
     merit: "merit",                   # 功德金
-    construction: "construction"       # 建設基金
+    construction: "construction",      # 建設基金
+    membership: "membership"           # 會員費用
   }
 
   enum :status, {

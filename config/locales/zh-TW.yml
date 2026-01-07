@@ -16,12 +16,13 @@ zh-TW:
       long: "%Y年%m月%d日 %H:%M"
 
   donation_types:
-    light_peace: "平安燈"
+    light_peace: "財力燈"
     light_bright: "光明燈"
     light_tai: "太歲燈"
     incense: "香油錢"
     merit: "功德金"
     construction: "建設基金"
+    membership: "會員費用"
 
   donation_statuses:
     pending: "待開單"
