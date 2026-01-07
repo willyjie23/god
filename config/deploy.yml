@@ -18,6 +18,10 @@ servers:
 proxy:
   ssl: true
   host: jialiguangze.com
+  healthcheck:
+    path: /up
+    interval: 3
+    timeout: 90
 
 # Where you keep your container images.
 registry:
@@ -36,6 +40,8 @@ env:
     - NEWEBPAY_HASH_KEY
     - NEWEBPAY_HASH_IV
   clear:
+    # Rails 環境
+    RAILS_ENV: production
     # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
     # When you start using multiple servers, you should split out job processing to a dedicated machine.
     SOLID_QUEUE_IN_PUMA: true
@@ -52,6 +58,9 @@ env:
 
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
+    # Rails 設定
+    RAILS_LOG_LEVEL: info
+    RAILS_SERVE_STATIC_FILES: true
 
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
 # "bin/kamal logs -r job" will tail logs from the first server in the job section.
@@ -74,9 +83,8 @@ asset_path: /rails/public/assets
 # Configure the image builder.
 builder:
   arch: amd64
-
-  # # Build image via remote server (useful for faster amd64 builds on arm64 computers)
-  # remote: ssh://docker@docker-builder-server
+  # Build on remote server (required for amd64 builds on Apple Silicon)
+  local: true
   #
   # # Pass arguments and secrets to the Docker build process
   # args:
