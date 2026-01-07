@@ -19,7 +19,6 @@ default: &default
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
-
 development:
   <<: *default
   database: zake_god_development
@@ -87,9 +86,11 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: zake_god_production
-    username: zake_god
-    password: <%= ENV["ZAKE_GOD_DATABASE_PASSWORD"] %>
+    database: <%= ENV.fetch("POSTGRES_DB_NAME", "zake_god_production") %>
+    username: <%= ENV.fetch("POSTGRES_USERNAME", "zake_god") %>
+    password: <%= ENV["POSTGRES_PASSWORD"] %>
+    host: <%= ENV.fetch("POSTGRES_HOST", "172.17.0.1") %>
+    port: <%= ENV.fetch("POSTGRES_PORT", "5432") %>
   cache:
     <<: *primary_production
     database: zake_god_production_cache
