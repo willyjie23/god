@@ -473,15 +473,16 @@
               <button type="button" class="amount-btn" data-amount="5000">5,000</button>
               <button type="button" class="amount-btn" data-amount="10000">10,000</button>
             </div>
-            <input type="number" name="amount" id="amountInput" placeholder="或輸入其他金額" min="100">
+            <input type="number" name="amount" id="amountInput" placeholder="或輸入其他金額" min="100" required>
           </div>
           <div class="form-group">
             <label>姓名（功德芳名）<span class="required">*</span></label>
             <input type="text" name="donor_name" placeholder="請輸入您的姓名" required>
           </div>
-          <div class="form-group">
-            <label>聯絡電話（選填）</label>
-            <input type="tel" name="phone" placeholder="請輸入聯絡電話">
+          <div class="form-group" id="phoneGroup">
+            <label>聯絡電話<span class="required" id="phoneRequired" style="display: none;">*</span></label>
+            <input type="tel" name="phone" id="phoneInput" placeholder="請輸入聯絡電話">
+            <p class="form-hint">需要收據時必填</p>
           </div>
           <div class="form-group">
             <label>付款方式<span class="required">*</span></label>
@@ -573,27 +574,33 @@ function selectDonationType(type, amount) {
   });
 }
 
-// 切換電子信箱必填狀態
-function toggleEmailRequired() {
+// 切換收據相關欄位必填狀態（電話和電子信箱）
+function toggleReceiptFieldsRequired() {
   var needsReceipt = document.getElementById('needsReceipt').checked;
   var emailRequired = document.getElementById('emailRequired');
   var emailInput = document.getElementById('emailInput');
+  var phoneRequired = document.getElementById('phoneRequired');
+  var phoneInput = document.getElementById('phoneInput');
 
   if (needsReceipt) {
     emailRequired.style.display = 'inline';
     emailInput.setAttribute('required', 'required');
+    phoneRequired.style.display = 'inline';
+    phoneInput.setAttribute('required', 'required');
   } else {
     emailRequired.style.display = 'none';
     emailInput.removeAttribute('required');
+    phoneRequired.style.display = 'none';
+    phoneInput.removeAttribute('required');
   }
 }
 
 // 覆寫表單提交
 document.addEventListener('DOMContentLoaded', function() {
-  // 監聽收據勾選變化
+  // 監聯收據勾選變化
   var needsReceiptCheckbox = document.getElementById('needsReceipt');
   if (needsReceiptCheckbox) {
-    needsReceiptCheckbox.addEventListener('change', toggleEmailRequired);
+    needsReceiptCheckbox.addEventListener('change', toggleReceiptFieldsRequired);
   }
 
   var form = document.getElementById('donationForm');
@@ -624,10 +631,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      // 驗證收據需要電子信箱
-      if (data.donation.needs_receipt && !data.donation.email) {
-        showMessage('需要收據時必須填寫電子信箱', 'error');
-        return;
+      // 驗證收據需要電話和電子信箱
+      if (data.donation.needs_receipt) {
+        if (!data.donation.phone || !data.donation.email) {
+          showMessage('需要收據時必須填寫聯絡電話和電子信箱', 'error');
+          return;
+        }
       }
 
       // 提交到 Rails API

@@ -50,6 +50,7 @@ class Donation < ApplicationRecord
   validates :donation_type, presence: true
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :donor_name, presence: true
+  validates :phone, presence: true, if: :needs_receipt?
   validates :email, presence: true, if: :needs_receipt?
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
 

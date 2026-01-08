@@ -15,9 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // 捐款金額按鈕
   initAmountButtons();
 
-  // 表單提交
-  initFormSubmit();
-
   // 平滑滾動
   initSmoothScroll();
 });
@@ -111,40 +108,6 @@ function initAmountButtons() {
   if (input) {
     input.addEventListener('input', function() {
       buttons.forEach(b => b.classList.remove('active'));
-    });
-  }
-}
-
-/**
- * 表單提交處理
- */
-function initFormSubmit() {
-  const form = document.getElementById('donationForm');
-
-  if (form) {
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      // 收集表單資料
-      const formData = new FormData(form);
-      const data = {};
-      formData.forEach((value, key) => {
-        data[key] = value;
-      });
-
-      // 驗證必填欄位
-      if (!data.type || !data.name || !data.phone) {
-        showMessage('請填寫必填欄位', 'error');
-        return;
-      }
-
-      // 模擬提交成功（實際需要接後端 API）
-      console.log('捐款登記資料:', data);
-      showMessage('感謝您的捐款登記！協會將盡快與您聯繫。', 'success');
-
-      // 清空表單
-      form.reset();
-      document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
     });
   }
 }
