@@ -23,12 +23,17 @@ class PaymentsController < ActionController::Base
       gateway_name: @gateway.gateway_name
     )
 
+    # 根據來源決定是否啟用取號 callback
+    # - 前台: 不設置 payment_info_url，讓使用者在藍新頁面看到取號資訊
+    # - 後台: 設置 payment_info_url，取號資訊會透過 callback 傳回後台
+    info_url = @donation.admin? ? payment_info_url : nil
+
     @payment_form_html = @gateway.payment_form_html(
       @donation,
       return_url: payment_result_url,
       notify_url: payment_notify_url,
       client_back_url: root_url,
-      payment_info_url: payment_info_url
+      payment_info_url: info_url
     )
 
     render :checkout, layout: false
@@ -61,8 +66,16 @@ class PaymentsController < ActionController::Base
     result = gateway.parse_callback(params)
 
     if result.success?
+      was_already_paid = donation.paid?
       donation.save_payment_result!(result)
       Rails.logger.info "[Payment Notify] Donation #{donation.id} marked as paid"
+
+      # 前台付款成功後，根據是否需要收據自動發送 email
+      # 只在狀態從非 paid 變成 paid 時發送，避免重複
+      if !was_already_paid && donation.frontend? && donation.needs_receipt? && donation.email.present?
+        donation.send_receipt_email!
+        Rails.logger.info "[Payment Notify] Receipt email sent to #{donation.email}"
+      end
     else
       Rails.logger.warn "[Payment Notify] Payment not successful: #{result.rtn_msg}"
     end
@@ -136,7 +149,16 @@ class PaymentsController < ActionController::Base
       if result.success?
         @success = true
         @message = "感謝您的捐獻！付款已完成。"
+        was_already_paid = donation.paid?
         donation.save_payment_result!(result)
+
+        # 前台付款成功後，根據是否需要收據自動發送 email
+        # 備援機制：若 notify callback 未執行，在此發送
+        # 只在狀態從非 paid 變成 paid 時發送，避免重複
+        if !was_already_paid && donation.frontend? && donation.needs_receipt? && donation.email.present?
+          donation.send_receipt_email!
+          Rails.logger.info "[Payment Result] Receipt email sent to #{donation.email}"
+        end
       else
         @success = false
         @message = "付款未完成：#{result.rtn_msg}"

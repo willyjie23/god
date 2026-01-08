@@ -44,6 +44,8 @@ env:
     - NEWEBPAY_MERCHANT_ID
     - NEWEBPAY_HASH_KEY
     - NEWEBPAY_HASH_IV
+    - RESEND_API_KEY
+    - APP_HOST
   clear:
     # Rails 環境
     RAILS_ENV: production
