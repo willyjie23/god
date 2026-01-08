@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>捐款收據 - <%= @donation.receipt_number %></title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      color: #333;
+    }
+
+    .receipt-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px 50px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #c9a227;
+      padding-bottom: 20px;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: bold;
+      color: #8b0000;
+    }
+
+    .org-name {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+      text-align: right;
+    }
+
+    .org-address {
+      font-size: 12px;
+      color: #666;
+      text-align: right;
+      margin-top: 5px;
+    }
+
+    .details-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .detail-group h3 {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+
+    .detail-row {
+      display: flex;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .detail-label {
+      width: 100px;
+      color: #666;
+      flex-shrink: 0;
+    }
+
+    .detail-value {
+      color: #333;
+      font-weight: 500;
+    }
+
+    .line-items {
+      margin: 30px 0;
+    }
+
+    .line-items table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .line-items th {
+      background: #f8f8f8;
+      padding: 12px 15px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #c9a227;
+    }
+
+    .line-items td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .line-items .amount {
+      text-align: right;
+      font-family: monospace;
+      font-size: 15px;
+    }
+
+    .line-items .total-row {
+      background: #fffbeb;
+    }
+
+    .line-items .total-row td {
+      font-weight: bold;
+      border-bottom: 2px solid #c9a227;
+    }
+
+    .stamp-section {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 40px;
+      padding-top: 20px;
+    }
+
+    .stamp {
+      width: 120px;
+      height: auto;
+      opacity: 0.9;
+    }
+
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .actions {
+      margin-top: 30px;
+      text-align: center;
+      padding: 20px;
+      background: #f8f8f8;
+      border-radius: 8px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 30px;
+      margin: 0 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #c9a227;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #a88820;
+    }
+
+    .btn-secondary {
+      background: #666;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #555;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .receipt-container {
+        box-shadow: none;
+        padding: 20px;
+      }
+
+      .actions {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt-container">
+    <div class="header">
+      <div class="title">捐款收據</div>
+      <div>
+        <div class="org-name">佳里廣澤信仰宗教協會</div>
+        <div class="org-address">台南市佳里區</div>
+      </div>
+    </div>
+
+    <div class="details-section">
+      <div class="detail-group">
+        <h3>收據資訊</h3>
+        <div class="detail-row">
+          <span class="detail-label">收據編號</span>
+          <span class="detail-value"><%= @donation.receipt_number %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">捐款日期</span>
+          <span class="detail-value"><%= (@donation.paid_at || @donation.created_at).strftime("%Y年%m月%d日") %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">開立日期</span>
+          <span class="detail-value"><%= Time.current.strftime("%Y年%m月%d日") %></span>
+        </div>
+      </div>
+
+      <div class="detail-group">
+        <h3>捐款人資訊</h3>
+        <div class="detail-row">
+          <span class="detail-label">功德芳名</span>
+          <span class="detail-value"><%= @donation.donor_name %></span>
+        </div>
+        <% if @donation.phone.present? %>
+        <div class="detail-row">
+          <span class="detail-label">聯絡電話</span>
+          <span class="detail-value"><%= @donation.phone %></span>
+        </div>
+        <% end %>
+        <% if @donation.email.present? %>
+        <div class="detail-row">
+          <span class="detail-label">電子信箱</span>
+          <span class="detail-value"><%= @donation.email %></span>
+        </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="line-items">
+      <table>
+        <thead>
+          <tr>
+            <th>項目</th>
+            <th>說明</th>
+            <th style="text-align: right;">金額</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><%= @donation.donation_type_name %></td>
+            <td><%= @donation.prayer.presence || "一般捐獻" %></td>
+            <td class="amount">NT$ <%= number_with_delimiter(@donation.amount) %></td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="2" style="text-align: right;">合計</td>
+            <td class="amount">NT$ <%= number_with_delimiter(@donation.amount) %></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stamp-section">
+      <img src="/images/大章.jpg" alt="協會印章" class="stamp">
+    </div>
+
+    <div class="footer">
+      感謝您的善心捐獻，功德無量！<br>
+      本收據僅作為捐款證明，請妥善保存。
+    </div>
+  </div>
+
+  <div class="actions">
+    <%= link_to "下載 PDF 收據", receipt_donation_path(@donation), class: "btn btn-primary" %>
+    <a href="javascript:window.print()" class="btn btn-secondary">列印收據</a>
+  </div>
+</body>
+</html>

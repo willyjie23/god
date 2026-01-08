@@ -3,7 +3,12 @@ Rails.application.routes.draw do
   ActiveAdmin.routes(self)
 
   # 前台捐獻
-  resources :donations, only: [ :create ]
+  resources :donations, only: [ :create ] do
+    member do
+      get :receipt
+      get :receipt_preview
+    end
+  end
 
   # 金流
   get  "payments/:donation_id/checkout", to: "payments#checkout",      as: :payment_checkout

@@ -1,0 +1,21 @@
+佳里廣澤信仰宗教協會 - 捐款收據
+=====================================
+
+<%= @donation.donor_name %> 您好：
+
+感謝您對本協會的善心捐獻！您的功德將廣結善緣，庇佑平安。
+
+【捐款資訊】
+收據編號：<%= @donation.receipt_number %>
+捐款類型：<%= @donation.donation_type_name %>
+捐款日期：<%= (@donation.paid_at || @donation.created_at).strftime("%Y年%m月%d日") %>
+<% if @donation.prayer.present? %>祈福內容：<%= @donation.prayer %>
+<% end %>
+捐款金額：NT$ <%= number_with_delimiter(@donation.amount) %>
+
+附件為您的捐款收據 PDF 檔案，請妥善保存。
+如有任何疑問，歡迎與我們聯繫。
+
+功德無量，福慧雙修
+
+佳里廣澤信仰宗教協會 敬上

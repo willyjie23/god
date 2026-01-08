@@ -46,6 +46,13 @@ gem "devise"
 # Admin interface
 gem "activeadmin"
 
+# PDF receipts
+gem "receipts"
+gem "matrix" # Required by prawn in Ruby 3.1+
+
+# Email service
+gem "resend"
+
 # ActiveAdmin dependencies
 gem "sassc-rails"
 

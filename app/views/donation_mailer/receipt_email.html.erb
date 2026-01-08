@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #c9a227;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #8b0000;
+      margin: 0;
+      font-size: 24px;
+    }
+    .header p {
+      color: #666;
+      margin: 10px 0 0;
+    }
+    .content {
+      background: #f9f9f9;
+      padding: 25px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .info-row {
+      display: flex;
+      margin-bottom: 12px;
+    }
+    .info-label {
+      width: 100px;
+      color: #666;
+      flex-shrink: 0;
+    }
+    .info-value {
+      font-weight: 500;
+    }
+    .amount {
+      font-size: 24px;
+      color: #c9a227;
+      font-weight: bold;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .footer {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+    .note {
+      background: #fffbeb;
+      border: 1px solid #c9a227;
+      border-radius: 6px;
+      padding: 15px;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>佳里廣澤信仰宗教協會</h1>
+    <p>捐款收據</p>
+  </div>
+
+  <p><%= @donation.donor_name %> 您好：</p>
+
+  <p>感謝您對本協會的善心捐獻！您的功德將廣結善緣，庇佑平安。</p>
+
+  <div class="content">
+    <div class="info-row">
+      <span class="info-label">收據編號</span>
+      <span class="info-value"><%= @donation.receipt_number %></span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">捐款類型</span>
+      <span class="info-value"><%= @donation.donation_type_name %></span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">捐款日期</span>
+      <span class="info-value"><%= (@donation.paid_at || @donation.created_at).strftime("%Y年%m月%d日") %></span>
+    </div>
+    <% if @donation.prayer.present? %>
+    <div class="info-row">
+      <span class="info-label">祈福內容</span>
+      <span class="info-value"><%= @donation.prayer %></span>
+    </div>
+    <% end %>
+
+    <div class="amount">
+      捐款金額：NT$ <%= number_with_delimiter(@donation.amount) %>
+    </div>
+  </div>
+
+  <div class="note">
+    附件為您的捐款收據 PDF 檔案，請妥善保存。如有任何疑問，歡迎與我們聯繫。
+  </div>
+
+  <div class="footer">
+    <p>功德無量，福慧雙修</p>
+    <p>佳里廣澤信仰宗教協會 敬上</p>
+  </div>
+</body>
+</html>

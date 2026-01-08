@@ -129,4 +129,34 @@ class Donation < ApplicationRecord
       nil
     end
   end
+
+  # 是否可以產生收據
+  def can_generate_receipt?
+    paid? && needs_receipt?
+  end
+
+  # 產生收據 PDF
+  def generate_receipt
+    raise "無法產生收據：捐款尚未付款" unless paid?
+    DonationReceiptService.new(self)
+  end
+
+  # 收據編號
+  def receipt_number
+    year = (paid_at || created_at).year
+    "#{year}-#{id.to_s.rjust(6, '0')}"
+  end
+
+  # 發送收據 email
+  def send_receipt_email!
+    raise "無法發送收據：捐款尚未付款" unless paid?
+    raise "無法發送收據：沒有填寫電子信箱" if email.blank?
+
+    DonationMailer.receipt_email(self).deliver_later
+  end
+
+  # 是否可以發送收據 email
+  def can_send_receipt_email?
+    paid? && email.present?
+  end
 end

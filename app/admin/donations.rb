@@ -68,7 +68,11 @@ ActiveAdmin.register Donation do
     column "建立", :created_at, sortable: :created_at do |d|
       d.created_at.strftime("%m/%d %H:%M")
     end
-    actions
+    actions do |donation|
+      if donation.paid?
+        item "收據", receipt_donation_path(donation), class: "member_link"
+      end
+    end
   end
 
   # 顯示統計資訊（在 sidebar）
@@ -215,6 +219,21 @@ ActiveAdmin.register Donation do
     end
 
     panel "快速操作" do
+      if resource.paid?
+        para link_to "線上預覽收據 (HTML)", receipt_preview_donation_path(resource),
+                     class: "button", target: "_blank"
+        para link_to "下載收據 (PDF)", receipt_donation_path(resource),
+                     class: "button", target: "_blank"
+
+        if resource.can_send_receipt_email?
+          para link_to "發送收據至 Email", send_receipt_email_admin_donation_path(resource),
+                       method: :post, class: "button",
+                       data: { confirm: "確定要發送收據至 #{resource.email} 嗎？" }
+        elsif resource.email.blank?
+          para "無法發送 Email：未填寫電子信箱", style: "color: #999; font-size: 12px;"
+        end
+      end
+
       if resource.pending?
         para link_to "前往付款", payment_checkout_path(resource),
                      class: "button", target: "_blank"
@@ -272,6 +291,16 @@ ActiveAdmin.register Donation do
   member_action :cancel, method: :put do
     resource.update!(status: :cancelled)
     redirect_to admin_donation_path(resource), notice: "已取消此捐獻"
+  end
+
+  member_action :send_receipt_email, method: :post do
+    if resource.can_send_receipt_email?
+      resource.send_receipt_email!
+      redirect_to admin_donation_path(resource), notice: "收據已發送至 #{resource.email}"
+    else
+      error_msg = resource.paid? ? "沒有填寫電子信箱" : "捐款尚未付款"
+      redirect_to admin_donation_path(resource), alert: "無法發送收據：#{error_msg}"
+    end
   end
 
   # 匯出 CSV
