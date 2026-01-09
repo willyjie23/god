@@ -10,6 +10,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # 最新消息（部落格）
+  resources :posts, only: [ :index, :show ], param: :slug
+
   # 金流
   get  "payments/:donation_id/checkout", to: "payments#checkout",      as: :payment_checkout
   post "payments/notify",                to: "payments#notify",        as: :payment_notify

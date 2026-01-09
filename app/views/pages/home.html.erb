@@ -8,7 +8,7 @@
       <li><a href="#about">關於協會</a></li>
       <li><a href="#deity">廣澤尊王</a></li>
       <li><a href="#culture">信仰文化</a></li>
-      <li><a href="#events">法會活動</a></li>
+      <li><a href="<%= posts_path %>">最新消息</a></li>
       <li><a href="#light">光明燈</a></li>
       <li><a href="#donation">捐款護持</a></li>
     </ul>
@@ -352,6 +352,38 @@
     </div>
   </div>
 </section>
+
+<!-- 最新消息 -->
+<% if @recent_posts.present? && @recent_posts.any? %>
+<section class="section news-section" id="news">
+  <div class="container">
+    <div class="section-title">
+      <h2>最新消息</h2>
+      <p>活動資訊・法會公告・協會動態</p>
+    </div>
+    <div class="news-grid">
+      <% @recent_posts.each do |post| %>
+        <article class="news-card fade-in">
+          <div class="news-content">
+            <time class="news-date" datetime="<%= post.published_at&.iso8601 %>">
+              <%= post.published_at&.strftime("%Y年%m月%d日") %>
+            </time>
+            <h3 class="news-title">
+              <%= link_to post.title, post_path(post.slug) %>
+            </h3>
+            <% if post.summary.present? %>
+              <p class="news-summary"><%= truncate(post.summary, length: 80) %></p>
+            <% end %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+    <div class="news-more">
+      <%= link_to "查看全部消息", posts_path, class: "btn btn-outline" %>
+    </div>
+  </div>
+</section>
+<% end %>
 
 <!-- 線上點燈 -->
 <section class="section light-offering" id="light">

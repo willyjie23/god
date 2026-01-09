@@ -24,7 +24,8 @@ class Donation < ApplicationRecord
     incense: "incense",               # 香油錢
     merit: "merit",                   # 功德金
     construction: "construction",      # 建設基金
-    membership: "membership"           # 會員費用
+    membership: "membership",          # 會員費用
+    ceremony: "ceremony"               # 法會費用
   }
 
   enum :status, {

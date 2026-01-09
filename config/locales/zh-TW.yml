@@ -23,6 +23,7 @@ zh-TW:
     merit: "功德金"
     construction: "建設基金"
     membership: "會員費用"
+    ceremony: "法會費用"
 
   donation_statuses:
     pending: "待開單"
@@ -39,6 +40,10 @@ zh-TW:
     cvs_barcode: "超商條碼"
     cvs_code: "超商代碼"
     virtual_account: "虛擬帳號"
+
+  post_statuses:
+    draft: "草稿"
+    published: "已發布"
 
   errors:
     messages:
@@ -58,7 +63,18 @@ zh-TW:
     models:
       donation: "捐獻紀錄"
       admin_user: "管理員"
+      post: "文章"
     attributes:
+      post:
+        title: "標題"
+        slug: "網址代稱"
+        summary: "摘要"
+        content: "內容"
+        status: "狀態"
+        published_at: "發布時間"
+        author: "作者"
+        created_at: "建立時間"
+        updated_at: "更新時間"
       donation:
         donation_type: "捐款類型"
         amount: "金額"
