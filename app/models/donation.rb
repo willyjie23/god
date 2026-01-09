@@ -25,7 +25,8 @@ class Donation < ApplicationRecord
     merit: "merit",                   # 功德金
     construction: "construction",      # 建設基金
     membership: "membership",          # 會員費用
-    ceremony: "ceremony"               # 法會費用
+    ceremony: "ceremony",              # 法會費用
+    statue: "statue"                   # 神像製作
   }
 
   enum :status, {

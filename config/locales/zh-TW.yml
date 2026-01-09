@@ -24,6 +24,7 @@ zh-TW:
     construction: "建設基金"
     membership: "會員費用"
     ceremony: "法會費用"
+    statue: "神像製作"
 
   donation_statuses:
     pending: "待開單"
