@@ -87,9 +87,10 @@ builder:
   # secrets:
   #   - GITHUB_TOKEN
   #   - RAILS_MASTER_KEY
-# Use a different ssh user than root
-# ssh:
-#   user: app
+ssh:
+  user: root
+  keys:
+    - ~/.ssh/IOTC
 
 # Use accessory services (secrets come from .kamal/secrets).
 # 使用伺服器現有的 PostgreSQL，不需要 accessory
