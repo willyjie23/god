@@ -21,6 +21,7 @@ ActiveAdmin.register Donation do
   filter :donor_name_cont, label: "芳名"
   filter :merchant_trade_no_cont, label: "金流單號"
   filter :created_at, label: "建立時間"
+  filter :paid_at, label: "付款時間"
   filter :amount, label: "金額"
 
   # 列表頁
