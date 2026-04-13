@@ -69,6 +69,9 @@ ActiveAdmin.register Donation do
     column "建立", :created_at, sortable: :created_at do |d|
       d.created_at.strftime("%m/%d %H:%M")
     end
+    column "付款時間", :paid_at, sortable: :paid_at do |d|
+      d.paid_at&.strftime("%m/%d %H:%M") || "-"
+    end
     actions do |donation|
       if donation.paid?
         item "收據", receipt_donation_path(donation), class: "member_link"
