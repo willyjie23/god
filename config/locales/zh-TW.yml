@@ -154,3 +154,7 @@ zh-TW:
       entry:
         one: "筆資料"
         other: "筆資料"
+
+  ransack:
+    predicates:
+      lteq_end_of_day: "小於或等於"
